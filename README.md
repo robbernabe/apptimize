@@ -1,4 +1,4 @@
 apptimize
 =========
 
-Preserve data usage (kill configured apps) when tethering via your mobile device.
+Prevent applications on your Mac from running when connected to selected networks.

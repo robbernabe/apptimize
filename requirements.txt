@@ -1,0 +1,4 @@
+SQLAlchemy==0.8.0b2
+appscript==1.0.1
+argparse==1.2.1
+plist==0.2
