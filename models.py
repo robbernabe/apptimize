@@ -18,11 +18,24 @@ class Networks(Base):
     date_added = schema.Column(types.DateTime, default=now)
     enabled = schema.Column(types.Boolean)
 
+    def __init__(self, bssid, ssid, date_added, enabled):
+        self.bssid = bssid
+        self.ssid = ssid
+        self.date_added = date_added
+        self.enabled = enabled
+
 class Applications(Base):
     __tablename__ = 'apptimized_applications'
 
     id = schema.Column(types.Integer, primary_key=True)
     name = schema.Column(types.String)
-    ssid = schema.Column(types.String)
+    path = schema.Column(types.String)
     date_added = schema.Column(types.DateTime, default=now)
     enabled = schema.Column(types.Boolean)
+
+    def __init__(self, name, path, date_added, enabled):
+        self.name = name
+        self.path = path
+        self.date_added = date_added
+        self.enabled = enabled
+

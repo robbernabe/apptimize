@@ -3,11 +3,13 @@ import shutil
 import appscript
 import plistlib
 import inspect
+import datetime
 from subprocess import check_output, CalledProcessError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from settings import settings
-from models import Networks
+from models import Networks, Applications
+
 
 class Apptimize(object):
     """
@@ -21,17 +23,19 @@ class Apptimize(object):
 
         """
 
-        self.name = application_name
-        self.app_object = appscript.app(self.name)              # appscript object to work with
+        self.app_name = application_name
+        self.app_object = appscript.app(self.app_name)              # appscript object to work with
         self.app_path = self.app_object.AS_appdata.identifier   # absolute path to application
+        self.network_dict = {}
 
         # Create our database object
-        engine = create_engine(settings.DATABASE_URI, echo=True)
+        engine = create_engine(settings.DATABASE_URI, echo=False)
         Session = sessionmaker(bind=engine)
-        self.db_conn = Session()
+        self.db = Session()
 
         # Get all the networks we have stored already for easy access
-        self.all_networks = self.db_conn.query(Networks).all()
+        # self.all_networks = self.db.query(Networks).all()
+        # self.app_applications = self.db.query(Applications).all()
 
         # TODO: Check if there are any networks and set related attributes (num_networks, num_enabled, num_disabled, etc.)
 
@@ -72,15 +76,24 @@ class Apptimize(object):
 
         self.app_object.quit()
 
-    def add_application(self):
+    @staticmethod
+    def add_application(apptimize_object):
         """
         Add an application to the apptimize database.
 
         """
 
-        pass
+        now = datetime.datetime.now()
+        app_name = apptimize_object.app_name
+        app_path = apptimize_object.app_path
 
-    def remove_application(self):
+        # TODO: try/catch
+        application = Applications(app_name, app_path, now, enabled=True)
+        apptimize_object.db.add(application)
+        apptimize_object.db.commit()
+
+    @staticmethod
+    def remove_application(apptimize_object):
         """
         Remove an application from the apptimize database.
 
@@ -88,15 +101,32 @@ class Apptimize(object):
 
         pass
 
-    def add_network(self):
+    @staticmethod
+    def add_network(apptimize_object):
         """
         Add a network to the apptimize database.
 
+        network_dict = {
+            'bssid': 'bssid_here',
+            'ssid': 'ssid_here'
+        }
+
         """
 
-        pass
+        now = datetime.datetime.now()
 
-    def remove_network(self):
+        # TODO: try/catch
+        network = Networks(
+            apptimize_object.network_dict['bssid'],
+            apptimize_object.network_dict['ssid'],
+            now,
+            enabled=True
+        )
+        apptimize_object.db.add(network)
+        apptimize_object.db.commit()
+
+    @staticmethod
+    def remove_network(apptimize_object):
         """
         Remove a network from the apptimize database.
 
@@ -140,7 +170,7 @@ class Apptimize(object):
             from models import Base
             # TODO: if file exists, rename it before creating new
             # Turn echo off to disable debug info
-            engine = create_engine(settings.DATABASE_URI, echo=True)
+            engine = create_engine(settings.DATABASE_URI, echo=False)
             Base.metadata.create_all(engine)
         except Exception as e:
             print 'Fatal: Problem installing sqlite database: %s' % e
