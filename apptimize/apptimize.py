@@ -17,27 +17,32 @@ class Apptimize(object):
 
     """
 
-    def __init__(self, application_name):
+    def __init__(self):
         """
         Setup operations.
 
         """
 
-        self.app_name = application_name
-        self.app_object = appscript.app(self.app_name)              # appscript object to work with
-        self.app_path = self.app_object.AS_appdata.identifier   # absolute path to application
-        self.network_dict = {}
+        self.app_name = None
+        self.app_object = None
+        self.app_path = None
+        self.net_bssid = None
+        self.net_ssid = None
 
         # Create our database object
         engine = create_engine(settings.DATABASE_URI, echo=False)
         Session = sessionmaker(bind=engine)
         self.db = Session()
 
-        # Get all the networks we have stored already for easy access
-        # self.all_networks = self.db.query(Networks).all()
-        # self.app_applications = self.db.query(Applications).all()
+        # TODO: Check that a database exists when we're called. Otherwise,
+        # we'll need to reinstall.
 
-        # TODO: Check if there are any networks and set related attributes (num_networks, num_enabled, num_disabled, etc.)
+        # Get all the networks & apps we have stored already for easy access
+        self.all_networks = self.db.query(Networks).all()
+        self.all_applications = self.db.query(Applications).all()
+
+        # TODO: Check if there are any networks and set related attributes
+        # (num_networks, num_enabled, num_disabled, etc.)
 
     def running(self):
         """
@@ -48,14 +53,12 @@ class Apptimize(object):
 
     def ready_to_apptimize(self):
         """
-        Are we connected to any of our designated default gateways?
+        Are we connected to any of our designated networks?
 
         """
 
-        gateway_mac = str(check_output(settings.BSSID_CMD, shell=True)).strip()
-        print gateway_mac
-        print settings.TETHERING_MACS
-        if gateway_mac.lower() in settings.TETHERING_MACS:
+        str = str(check_output(settings.BSSID_CMD, shell=True)).strip()
+        if str.lower() in settings.TETHERING_MACS:
             return True
         else:
             return False
@@ -76,24 +79,23 @@ class Apptimize(object):
 
         self.app_object.quit()
 
-    @staticmethod
-    def add_application(apptimize_object):
+    def add_application(self, application_name):
         """
         Add an application to the apptimize database.
 
         """
 
+        self.app_name = application_name
+        self.app_object = appscript.app(self.app_name)              # appscript object to work with
+        self.app_path = self.app_object.AS_appdata.identifier   # absolute path to application
         now = datetime.datetime.now()
-        app_name = apptimize_object.app_name
-        app_path = apptimize_object.app_path
 
         # TODO: try/catch
-        application = Applications(app_name, app_path, now, enabled=True)
-        apptimize_object.db.add(application)
-        apptimize_object.db.commit()
+        application = Applications(self.app_name, self.app_path, now, enabled=True)
+        self.db.add(application)
+        self.db.commit()
 
-    @staticmethod
-    def remove_application(apptimize_object):
+    def remove_application(self):
         """
         Remove an application from the apptimize database.
 
@@ -101,8 +103,7 @@ class Apptimize(object):
 
         pass
 
-    @staticmethod
-    def add_network(apptimize_object):
+    def add_network(self, network_dict):
         """
         Add a network to the apptimize database.
 
@@ -113,17 +114,25 @@ class Apptimize(object):
 
         """
 
+        # TODO: validate network_dict
+
+        for key, value in network_dict.iteritems():
+            if key == 'bssid':
+                self.net_bssid = value
+            elif key == 'ssid':
+                self.net_ssid = value
+
         now = datetime.datetime.now()
 
         # TODO: try/catch
         network = Networks(
-            apptimize_object.network_dict['bssid'],
-            apptimize_object.network_dict['ssid'],
+            self.net_bssid,
+            self.net_ssid,
             now,
             enabled=True
         )
-        apptimize_object.db.add(network)
-        apptimize_object.db.commit()
+        self.db.add(network)
+        self.db.commit()
 
     @staticmethod
     def remove_network(apptimize_object):
@@ -150,7 +159,7 @@ class Apptimize(object):
         """
 
         # Check installation requirements
-        # Apptimize.check_requirements()
+        # TODO: Apptimize.check_requirements()
 
         # Install our base system
         try:
@@ -162,7 +171,7 @@ class Apptimize(object):
             print 'FATAL: problem installing files: %s' % e
             sys.exit(1)
         except CalledProcessError:
-            print 'FATAL: Problem loading plist file into LaunchServices.'
+            print 'FATAL: Problem loading plist file into LaunchServices'
             sys.exit(1)
 
         # Setup our permanent storage (SQLite database)

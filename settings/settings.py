@@ -23,6 +23,6 @@ SSID_CMD = '%s | grep [^B]SSID | cut -f2 -d\: | sed \'s/[ ]*//\'' % AIRPORT_CMD
 PLIST_LOCATION = '%s/Library/LaunchAgents/Apptimize.plist' % home
 PLIST_DICT = {
     'Label': 'rob.pe.apptimize',
-    'ProgramArguments': ['/usr/local/bin/apptimizer.py'],
+    'ProgramArguments': ['/usr/local/bin/apptimizer.py run'],
     'WatchPaths': ['/Library/Preferences/SystemConfiguration']
 }
