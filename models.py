@@ -36,7 +36,7 @@ class Applications(Base):
     path = schema.Column(types.String)
     date_added = schema.Column(types.DateTime, default=now)
     enabled = schema.Column(types.Boolean)
-    network_id = schema.Column(types.Integer, ForeignKey('apptimized_networks.id'))
+    network_id = schema.Column(types.Integer, ForeignKey('apptimized_networks.id'), nullable=True)
 
     def __init__(self, name, path, date_added, enabled):
         self.name = name

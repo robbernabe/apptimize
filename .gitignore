@@ -38,4 +38,4 @@ nosetests.xml
 .idea
 .ropeproject/
 *.swp
-db/*.sql3
+db/

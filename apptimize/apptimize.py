@@ -4,6 +4,7 @@ import appscript
 import plistlib
 import inspect
 import datetime
+from appscript import ApplicationNotFoundError
 from subprocess import check_output, CalledProcessError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -85,17 +86,21 @@ class Apptimize(object):
 
         """
 
-        self.app_name = application_name
-        self.app_object = appscript.app(self.app_name)              # appscript object to work with
-        self.app_path = self.app_object.AS_appdata.identifier   # absolute path to application
-        now = datetime.datetime.now()
-
         # TODO: try/catch
-        application = Applications(self.app_name, self.app_path, now, enabled=True)
-        self.db.add(application)
-        self.db.commit()
+        try:
+            self.app_name = application_name
+            self.app_object = appscript.app(self.app_name)              # appscript object to work with
+            self.app_path = self.app_object.AS_appdata.identifier   # absolute path to application
+            now = datetime.datetime.now()
+
+            application = Applications(self.app_name, self.app_path, now, enabled=True)
+            self.db.add(application)
+            self.db.commit()
+        except ApplicationNotFoundError as e:
+            print 'Fatal: ', e
 
     def remove_application(self):
+
         """
         Remove an application from the apptimize database.
 

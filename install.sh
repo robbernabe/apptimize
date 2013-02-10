@@ -1,8 +1,8 @@
 #/bin/bash -
 #
-# Install script to be run with something like:
-#   wget -qO - https://raw.github.com/robbernabe/bootstrap | sh
+# Non-git install script to be run with something like:
+#   wget -qO - https://raw.github.com/robbernabe/bootstrap.sh | sh
 
-# 1) git pull
+# 1) cd && wget tarball | tar xzf ...
 # 2) run bootstrap
 # 3) etc...
